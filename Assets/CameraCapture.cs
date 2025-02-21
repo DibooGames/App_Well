@@ -8,9 +8,31 @@ public class CaptureAndRotate : MonoBehaviour
     public Button captureButton;    // Bouton pour lancer le compte à rebours
     public Text countdownText;      // (Optionnel) Affichage du compte à rebours
 
+    private WebCamTexture webCamTexture;
+
     void Start()
     {
-        captureButton.onClick.AddListener(() => StartCoroutine(CountdownAndCapture()));
+        if (WebCamTexture.devices.Length > 0)
+        {
+            // On récupère la première caméra disponible
+            webCamTexture = new WebCamTexture();
+            rawImage.texture = webCamTexture;
+            webCamTexture.Play();
+            
+            // On ajuste la rotation pour que l'image s'affiche en portrait.
+            // La rotation à appliquer est donnée par videoRotationAngle.
+            int rotationAngle = webCamTexture.videoRotationAngle;
+            
+            // Si l'image est miroir (par exemple avec la caméra frontale), on peut avoir besoin d'inverser la rotation
+            if (webCamTexture.videoVerticallyMirrored)
+                rawImage.rectTransform.localEulerAngles = new Vector3(0, 0, rotationAngle);
+            else
+                rawImage.rectTransform.localEulerAngles = new Vector3(0, 0, -rotationAngle);
+        }
+        else
+        {
+            Debug.Log("Aucune caméra disponible sur cet appareil.");
+        }
     }
 
     IEnumerator CountdownAndCapture()

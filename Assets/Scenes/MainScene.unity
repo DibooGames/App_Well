@@ -742,7 +742,6 @@ MonoBehaviour:
   rawImage: {fileID: 1745169925}
   captureButton: {fileID: 1098696130}
   countdownText: {fileID: 0}
-  Dress: {fileID: 719996149}
 --- !u!114 &1745169925
 MonoBehaviour:
   m_ObjectHideFlags: 0
