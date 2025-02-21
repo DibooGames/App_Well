@@ -35,6 +35,11 @@ public class CaptureAndRotate : MonoBehaviour
         }
     }
 
+    public void Capture()
+    {
+        StartCoroutine(CountdownAndCapture());
+    }
+
     IEnumerator CountdownAndCapture()
     {
         int countdown = 3;
