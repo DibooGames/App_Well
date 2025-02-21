@@ -2,62 +2,63 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 
-public class CameraCapture : MonoBehaviour
+public class CaptureAndRotate : MonoBehaviour
 {
-    public RawImage rawImage;        // Pour afficher le flux de la caméra
-    public Button captureButton;     // Bouton UI pour démarrer le compte à rebours
-    public Text countdownText;       // (Optionnel) Pour afficher le compte à rebours à l'écran
-    private WebCamTexture webCamTexture;
-
-    [SerializeField] private GameObject Dress;
+    public RawImage rawImage;       // Affichage de la caméra ou de la capture
+    public Button captureButton;    // Bouton pour lancer le compte à rebours
+    public Text countdownText;      // (Optionnel) Affichage du compte à rebours
 
     void Start()
     {
-        // Vérification de la disponibilité d'une caméra
-        if (WebCamTexture.devices.Length > 0)
-        {
-            // Utilisation de la première caméra disponible
-            webCamTexture = new WebCamTexture();
-            rawImage.texture = webCamTexture;
-            rawImage.material.mainTexture = webCamTexture;
-            webCamTexture.Play();
-        }
-        else
-        {
-            Debug.Log("Aucune caméra disponible sur cet appareil.");
-        }
-
-        // Ajout du listener pour le bouton
-        captureButton.onClick.AddListener(StartCountdown);
-    }
-
-  public void StartCountdown()
-    {
-        StartCoroutine(CountdownAndCapture());
+        captureButton.onClick.AddListener(() => StartCoroutine(CountdownAndCapture()));
     }
 
     IEnumerator CountdownAndCapture()
-{
-    int countdown = 3;
-    while (countdown > 0)
     {
+        int countdown = 3;
+        while (countdown > 0)
+        {
+            if (countdownText != null)
+                countdownText.text = countdown.ToString();
+            yield return new WaitForSeconds(1f);
+            countdown--;
+        }
         if (countdownText != null)
-            countdownText.text = countdown.ToString();
+            countdownText.text = "";
 
-        Debug.Log("Compte à rebours: " + countdown);
-        yield return new WaitForSeconds(1f);
-        countdown--;
+        yield return new WaitForEndOfFrame();
+        Texture2D capturedTexture = ScreenCapture.CaptureScreenshotAsTexture();
+
+        // Rotation de la texture de 90 degrés (ajustez la valeur selon vos besoins)
+        Texture2D rotatedTexture = RotateTexture(capturedTexture, true);
+        rawImage.texture = rotatedTexture;
     }
 
-    if (countdownText != null)
-        countdownText.text = "";
+    /// <summary>
+    /// Effectue une rotation de la texture de 90 degrés.
+    /// Si clockwise vaut true, la rotation est dans le sens horaire.
+    /// </summary>
+    Texture2D RotateTexture(Texture2D originalTexture, bool clockwise)
+    {
+        int width = originalTexture.width;
+        int height = originalTexture.height;
+        Texture2D rotatedTexture = new Texture2D(height, width);
 
-    // Attendre la fin du frame pour capturer l'écran
-    yield return new WaitForEndOfFrame();
-    Texture2D screenTexture = ScreenCapture.CaptureScreenshotAsTexture();
-    rawImage.texture = screenTexture;
-    Debug.Log("Capture d'écran utilisée comme texture.");
-    Dress.SetActive(true);
-}
-
+        for (int i = 0; i < width; i++)
+        {
+            for (int j = 0; j < height; j++)
+            {
+                if (clockwise)
+                {
+                    rotatedTexture.SetPixel(j, width - i - 1, originalTexture.GetPixel(i, j));
+                }
+                else
+                {
+                    rotatedTexture.SetPixel(height - j - 1, i, originalTexture.GetPixel(i, j));
+                }
+            }
+        }
+        rotatedTexture.Apply();
+        return rotatedTexture;
+    }
 }
