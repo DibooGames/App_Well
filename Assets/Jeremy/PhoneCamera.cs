@@ -2,6 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using System.IO;
+using System;
+using NativeGalleryNamespace;
 
 public class PhoneCamera : MonoBehaviour
 {
@@ -12,6 +15,7 @@ public class PhoneCamera : MonoBehaviour
     public RawImage background;
     public RawImage snapshotDisplay; // Pour afficher la capture d'écran
     public AspectRatioFitter fit;
+    public GameObject UI;
 
     // Start is called before the first frame update
     private void Start()
@@ -68,25 +72,46 @@ public class PhoneCamera : MonoBehaviour
     
     public void TakeSnapshot()
     {
-        if (!camAvailable)
-            return;
+        // if (!camAvailable)
+        //     return;
 
         
-        Texture2D snapshot = new Texture2D(backCam.width, backCam.height);
-        snapshot.SetPixels(backCam.GetPixels());
-        snapshot.Apply();
+        // Texture2D snapshot = new Texture2D(backCam.width, backCam.height);
+        // snapshot.SetPixels(backCam.GetPixels());
+        // snapshot.Apply();
 
         
-        snapshot = RotateTexture(snapshot, backCam.videoRotationAngle);
+        // snapshot = RotateTexture(snapshot, backCam.videoRotationAngle);
 
         
-        snapshotDisplay.texture = snapshot;
-        snapshotDisplay.enabled = false;
-        snapshotDisplay.enabled = true;
+        // snapshotDisplay.texture = snapshot;
+        // snapshotDisplay.enabled = false;
+        // snapshotDisplay.enabled = true;
 
-        Debug.Log("Snapshot taken and rotated: " + backCam.videoRotationAngle + "°");
+        // Debug.Log("Snapshot taken and rotated: " + backCam.videoRotationAngle + "°");
+        UI.SetActive(false);
+        StartCoroutine(TakeAPhoto());
     }
+ IEnumerator TakeAPhoto()
+    {
+        // Wait until rendering is complete, before take the photo.
+        yield return new WaitForEndOfFrame();
 
+
+        Texture2D texture = new Texture2D(Screen.width, Screen.height, TextureFormat.RGB24, false);
+        texture.ReadPixels(new Rect(0, 0, Screen.width, Screen.height), 0, 0);
+        texture.Apply();
+
+        string name = "Screenshot" + System.DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".png";
+
+        string filePath = Path.Combine(Application.temporaryCachePath, name);
+        File.WriteAllBytes(filePath, texture.EncodeToPNG());
+
+        NativeGallery.SaveImageToGallery(texture, "WELL Project", name);
+
+        Destroy(texture);
+        UI.SetActive(true);
+    }
 
 
 
