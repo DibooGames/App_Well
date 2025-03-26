@@ -10,6 +10,7 @@ public class EditableText : MonoBehaviour, IPointerUpHandler
     public TMP_Text text;
     private TMP_InputField inputField;
     private string originalText;
+    private bool isDragging = false; // Track dragging state
     
     void Start()
     {
@@ -20,12 +21,27 @@ public class EditableText : MonoBehaviour, IPointerUpHandler
             if (text == null)
                 text = GetComponent<TMP_Text>();
                 
+            // Get the RectTransform of the text
+            RectTransform originalRect = text.GetComponent<RectTransform>();
+            
             // Create game object with input field
             GameObject inputFieldGO = new GameObject("EditorInputField");
             inputFieldGO.transform.SetParent(transform.parent);
-            inputFieldGO.transform.localPosition = transform.localPosition;
-            inputFieldGO.transform.localRotation = transform.localRotation;
-            inputFieldGO.transform.localScale = transform.localScale;
+            
+            // Add RectTransform to input field and copy properties from original
+            RectTransform inputRect = inputFieldGO.AddComponent<RectTransform>();
+            inputRect.anchoredPosition = originalRect.anchoredPosition;
+            inputRect.anchorMin = originalRect.anchorMin;
+            inputRect.anchorMax = originalRect.anchorMax;
+            inputRect.pivot = originalRect.pivot;
+            inputRect.sizeDelta = originalRect.sizeDelta;
+            inputRect.offsetMin = originalRect.offsetMin;
+            inputRect.offsetMax = originalRect.offsetMax;
+            
+            // Set world position/rotation/scale to match text exactly
+            inputFieldGO.transform.position = text.transform.position;
+            inputFieldGO.transform.rotation = text.transform.rotation;
+            inputFieldGO.transform.localScale = text.transform.localScale;
             
             // Add input field component
             inputField = inputFieldGO.AddComponent<TMP_InputField>();
@@ -33,21 +49,34 @@ public class EditableText : MonoBehaviour, IPointerUpHandler
             // Create text area for input field
             GameObject textArea = new GameObject("Text Area");
             textArea.transform.SetParent(inputFieldGO.transform);
-            textArea.transform.localPosition = Vector3.zero;
-            textArea.transform.localRotation = Quaternion.identity;
-            textArea.transform.localScale = Vector3.one;
+            
+            // Add RectTransform to text area and set to fill parent
+            RectTransform textAreaRect = textArea.AddComponent<RectTransform>();
+            textAreaRect.anchorMin = Vector2.zero;
+            textAreaRect.anchorMax = Vector2.one;
+            textAreaRect.offsetMin = Vector2.zero;
+            textAreaRect.offsetMax = Vector2.zero;
             
             // Create text component for input field
             TMP_Text inputText = Instantiate(text, textArea.transform);
             inputText.name = "Text";
-            inputText.rectTransform.anchorMin = Vector2.zero;
-            inputText.rectTransform.anchorMax = Vector2.one;
-            inputText.rectTransform.offsetMin = Vector2.zero;
-            inputText.rectTransform.offsetMax = Vector2.zero;
+            
+            // Setup input field rect transform to match original text
+            RectTransform inputTextRect = inputText.GetComponent<RectTransform>();
+            inputTextRect.anchorMin = Vector2.zero;
+            inputTextRect.anchorMax = Vector2.one;
+            inputTextRect.offsetMin = Vector2.zero;
+            inputTextRect.offsetMax = Vector2.zero;
             
             // Setup input field
             inputField.textComponent = inputText;
-            inputField.textViewport = textArea.GetComponent<RectTransform>() ?? textArea.AddComponent<RectTransform>();
+            inputField.textViewport = textAreaRect;
+            
+            // Copy text properties
+            inputText.fontSize = text.fontSize;
+            inputText.color = text.color;
+            inputText.font = text.font;
+            inputText.alignment = text.alignment;
             
             // Add content type and other settings
             inputField.contentType = TMP_InputField.ContentType.Standard;
@@ -64,7 +93,20 @@ public class EditableText : MonoBehaviour, IPointerUpHandler
     // Replace OnPointerClick with OnPointerUp to respond when finger is released
     public void OnPointerUp(PointerEventData eventData)
     {
-        OpenKeyboard();
+        // Only open keyboard if not dragging
+        if (!isDragging)
+        {
+            OpenKeyboard();
+        }
+        
+        // Reset drag state on pointer up
+        isDragging = false;
+    }
+    
+    // Add method to set dragging state from MoveElements
+    public void SetDragState(bool dragging)
+    {
+        isDragging = dragging;
     }
     
     public void OpenKeyboard()

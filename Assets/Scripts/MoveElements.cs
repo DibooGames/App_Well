@@ -9,6 +9,7 @@ public class MoveElements : MonoBehaviour, IPointerDownHandler, IDragHandler, IP
     private Canvas canvas;
     private bool isDragging = false;
     private Vector2 offset;
+    private EditableText editableText;
 
     [Header("Scaling Settings")]
     [SerializeField] private bool enableScaling = true;
@@ -24,6 +25,7 @@ public class MoveElements : MonoBehaviour, IPointerDownHandler, IDragHandler, IP
     {
         rectTransform = GetComponent<RectTransform>();
         canvas = GetComponentInParent<Canvas>();
+        editableText = GetComponent<EditableText>();
 
         if (canvas == null)
         {
@@ -55,6 +57,12 @@ public class MoveElements : MonoBehaviour, IPointerDownHandler, IDragHandler, IP
     {
         if (!isDragging)
             return;
+            
+        // Inform EditableText that we're dragging
+        if (editableText != null)
+        {
+            editableText.SetDragState(true);
+        }
 
         // Handle multi-touch scaling
         if (enableScaling && Input.touchCount == 2)
