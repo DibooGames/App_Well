@@ -32,13 +32,8 @@ public class SilhouetteCapture : MonoBehaviour
             cameraFeed.texture = webcamTexture;
             webcamTexture.Play();
 
-            int rotationAngle = webcamTexture.videoRotationAngle;
-            cameraFeed.rectTransform.localEulerAngles = new Vector3(0, 0, -rotationAngle);
-
-            if (webcamTexture.videoVerticallyMirrored)
-                cameraFeed.uvRect = new Rect(1, 0, -1, 1);
-            else
-                cameraFeed.uvRect = new Rect(0, 0, 1, 1);
+            // Wait a frame to ensure camera has started
+            StartCoroutine(AdjustCameraDisplay());
         }
         else
         {
@@ -51,6 +46,57 @@ public class SilhouetteCapture : MonoBehaviour
 
         // Lancer la séquence de capture quand le bouton est cliqué
         captureButton.onClick.AddListener(StartCapture);
+    }
+
+    private IEnumerator AdjustCameraDisplay()
+    {
+        // Wait for webcam to initialize properly
+        yield return new WaitForSeconds(0.1f);
+        
+        int rotationAngle = webcamTexture.videoRotationAngle;
+        cameraFeed.rectTransform.localEulerAngles = new Vector3(0, 0, -rotationAngle);
+
+        if (webcamTexture.videoVerticallyMirrored)
+            cameraFeed.uvRect = new Rect(1, 0, -1, 1);
+        else
+            cameraFeed.uvRect = new Rect(0, 0, 1, 1);
+        
+        // For portrait mode, we need different calculations
+        bool isPortrait = Screen.height > Screen.width;
+        
+        // Make sure the RawImage stretches to fill its parent container
+        RectTransform rt = cameraFeed.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(0, 0);
+        rt.anchorMax = new Vector2(1, 1);
+        rt.offsetMin = Vector2.zero;
+        rt.offsetMax = Vector2.zero;
+        
+        // Reset scale first
+        cameraFeed.rectTransform.localScale = Vector3.one;
+        
+        // Get the aspect ratio - for portrait mode we need to use inverted ratio
+        float cameraRatio = (float)webcamTexture.width / (float)webcamTexture.height;
+        float screenRatio = (float)Screen.width / (float)Screen.height;
+        
+        // In portrait mode, we want to fill height and center horizontally
+        if (isPortrait)
+        {
+            // Set aspect ratio proportions to maintain camera dimensions
+            float scaleFactor = (float)Screen.width / webcamTexture.width;
+            float scaleHeight = webcamTexture.height * scaleFactor;
+            float normalizedHeight = scaleHeight / Screen.height;
+            
+            // Create a centered, proportional rect that fills the height
+            float xOffset = (1f - (cameraRatio * screenRatio)) / 2f;
+            cameraFeed.uvRect = new Rect(0, 0, 1, 1);
+            
+            if (webcamTexture.videoVerticallyMirrored)
+                cameraFeed.uvRect = new Rect(0, 1, 1, -1);
+            
+            // Stretch to fill the view
+            rt.sizeDelta = new Vector2(0, 0);
+            rt.localScale = new Vector3(1.0f / screenRatio * cameraRatio, 1.0f, 1.0f);
+        }
     }
 
     void StartCapture()
