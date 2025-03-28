@@ -7,22 +7,28 @@ using UnityEngine.EventSystems;
 
 public class EditableText : MonoBehaviour, IPointerUpHandler, ISelectHandler, IDeselectHandler
 {
-    public TMP_Text text;
+    public TextMeshProUGUI text;
+     public TextManager textManager; // Reference to the TextManager script - now HideInInspector since it will be auto-assigned
     private TMP_InputField inputField;
     private string originalText;
+  
+
     private bool isDragging = false; // Track dragging state
     private bool isSelected = false; // Track selection state
+   
+    
     
     // Changed from private field to public property with private setter
     public static EditableText CurrentlySelectedText { get; private set; } = null;
     
     private Color originalColor;
     
-    void Start()
+    void Awake()
     {
+       
         // Store original color
         if (text == null)
-            text = GetComponent<TMP_Text>();
+            text = GetComponent<TextMeshProUGUI>();
         
         originalColor = text.color;
         
@@ -31,7 +37,7 @@ public class EditableText : MonoBehaviour, IPointerUpHandler, ISelectHandler, ID
         {
             // Store original text component reference
             if (text == null)
-                text = GetComponent<TMP_Text>();
+                text = GetComponent<TextMeshProUGUI>();
                 
             // Get the RectTransform of the text
             RectTransform originalRect = text.GetComponent<RectTransform>();
@@ -102,6 +108,72 @@ public class EditableText : MonoBehaviour, IPointerUpHandler, ISelectHandler, ID
         }
     }
     
+   
+    
+    void Update()
+    {
+        // Check for mouse clicks outside UI elements
+        if (Input.GetMouseButtonDown(0) && isSelected)
+        {
+            CheckClickOutsideUI();
+        }
+    }
+    
+    private void CheckClickOutsideUI()
+    {
+        // Check if we're clicking on a UI element with EventSystem first
+        if (EventSystem.current.IsPointerOverGameObject())
+        {
+            // We hit some UI element, let's check if it has the UI tag
+            PointerEventData eventData = new PointerEventData(EventSystem.current);
+            eventData.position = Input.mousePosition;
+            List<RaycastResult> results = new List<RaycastResult>();
+            EventSystem.current.RaycastAll(eventData, results);
+            
+            // Check if any of the UI elements under the pointer have the UI tag
+            bool hitUITag = false;
+            foreach (RaycastResult result in results)
+            {
+                if (result.gameObject.CompareTag("UI"))
+                {
+                    hitUITag = true;
+                    break;
+                }
+            }
+            
+            // If we didn't hit a UI tagged object, deselect
+            if (!hitUITag)
+            {
+                Deselect();
+            }
+            // Otherwise, we hit a UI tagged object, so do nothing
+        }
+        else
+        {
+            // We didn't hit any UI at all, so deselect
+            Deselect();
+        }
+    }
+    
+    private bool IsPointerOverUIElement()
+    {
+        // Check if pointer is over any UI element
+        PointerEventData eventData = new PointerEventData(EventSystem.current);
+        eventData.position = Input.mousePosition;
+        List<RaycastResult> results = new List<RaycastResult>();
+        EventSystem.current.RaycastAll(eventData, results);
+        
+        foreach (RaycastResult result in results)
+        {
+            if (result.gameObject.CompareTag("UI"))
+            {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
     // Replace OnPointerClick with OnPointerUp to respond when finger is released
     public void OnPointerUp(PointerEventData eventData)
     {
@@ -127,18 +199,31 @@ public class EditableText : MonoBehaviour, IPointerUpHandler, ISelectHandler, ID
     // Called by Unity's EventSystem when this object is selected
     public void OnSelect(BaseEventData eventData)
     {
-        Select();
+        {
+           
+            Select();
+         
+        }
     }
     
     // Called by Unity's EventSystem when another object is selected
     public void OnDeselect(BaseEventData eventData)
     {
-        Deselect();
+        // Skip deselection from the EventSystem - we'll handle this ourselves in CheckClickOutsideUI
+        // to avoid recursive deselection errors
     }
     
     // Select this text object
     private void Select()
     {
+       
+        
+        // Only set TextManager.Text if necessary
+        if (textManager != null && textManager.Text != text)
+        {
+            textManager.Text = text; // Set the TextManager's text to this text
+        }
+        
         // Deselect previous text if there was one
         if (CurrentlySelectedText != null && CurrentlySelectedText != this)
         {
@@ -150,32 +235,54 @@ public class EditableText : MonoBehaviour, IPointerUpHandler, ISelectHandler, ID
         CurrentlySelectedText = this;
         
         // Visual indicator of selection (highlight text)
-        text.color = Color.yellow; // Or any other visual indicator
+        if (text != null)
+        {
+            text.color = Color.yellow; // Or any other visual indicator
+        }
         
-        // Make sure the EventSystem knows this is selected
-        EventSystem.current.SetSelectedGameObject(gameObject);
+        // Only set as selected if it's not already the selected game object
+        if (EventSystem.current.currentSelectedGameObject != gameObject)
+        {
+            // Make sure the EventSystem knows this is selected
+            EventSystem.current.SetSelectedGameObject(gameObject);
+        }
+        
+       
     }
     
     // Deselect this text object
     public void Deselect()
     {
-        if (isSelected)
+        if (!isSelected)
+            return;
+            
+        
+        // Restore the original color
+        if (text != null)
         {
-            isSelected = false;
             text.color = originalColor;
-            
-            if (CurrentlySelectedText == this)
-            {
-                CurrentlySelectedText = null;
-            }
-            
-            // If this was the EventSystem's selected object, clear it
-            if (EventSystem.current.currentSelectedGameObject == gameObject)
-            {
-                EventSystem.current.SetSelectedGameObject(null);
-            }
         }
+        
+        // Only clear TextManager.Text if it's still referencing this text
+        if (textManager != null && textManager.Text == text)
+        {
+            textManager.Text = null; // Clear the TextManager's text reference
+        }
+        
+        isSelected = false;
+        
+        if (CurrentlySelectedText == this)
+        {
+            CurrentlySelectedText = null;
+        }
+        
+        // Avoid using EventSystem.SetSelectedGameObject to prevent recursion
+      
+     
     }
+     
+    
+  
     
     // Add method to set dragging state from MoveElements
     public void SetDragState(bool dragging)
@@ -217,4 +324,5 @@ public class EditableText : MonoBehaviour, IPointerUpHandler, ISelectHandler, ID
         // Retain selection after editing
         Select();
     }
+  
 }
