@@ -13,9 +13,9 @@ public class PhoneCamera : MonoBehaviour
     private Texture defaultBackground;
 
     public RawImage background;
-      // Pour afficher la capture d'écran
     public AspectRatioFitter fit;
     public GameObject UI;
+    public GameObject clothing; // Reference to the clothing image
 
     // Start is called before the first frame update
     private void Start()
@@ -72,28 +72,33 @@ public class PhoneCamera : MonoBehaviour
     
     public void TakeSnapshot()
     {
-       
         UI.SetActive(false);
+        clothing.SetActive(true); // Activate the clothing image
         StartCoroutine(TakeAPhoto());
     }
- IEnumerator TakeAPhoto()
+
+    IEnumerator TakeAPhoto()
     {
-        // Wait until rendering is complete, before take the photo.
+        // Activate the clothing image so it's visible on screen.
+        clothing.SetActive(true);
+
+        // Wait until the frame is rendered.
         yield return new WaitForEndOfFrame();
 
+        // Capture the entire screen (including UI) as a Texture2D.
+        Texture2D screenshot = ScreenCapture.CaptureScreenshotAsTexture();
 
-        Texture2D texture = new Texture2D(Screen.width, Screen.height, TextureFormat.RGB24, false);
-        texture.ReadPixels(new Rect(0, 0, Screen.width, Screen.height), 0, 0);
-        texture.Apply();
-
+        // Save the image to the gallery.
         string name = "Screenshot" + System.DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".png";
-
         string filePath = Path.Combine(Application.temporaryCachePath, name);
-        File.WriteAllBytes(filePath, texture.EncodeToPNG());
+        File.WriteAllBytes(filePath, screenshot.EncodeToPNG());
+        NativeGallery.SaveImageToGallery(screenshot, "WELL Project", name);
 
-        NativeGallery.SaveImageToGallery(texture, "WELL Project", name);
+        // Clean up.
+        Destroy(screenshot);
 
-        Destroy(texture);
+        // Deactivate the clothing image.
+        clothing.SetActive(false);
         UI.SetActive(true);
     }
 

@@ -5,15 +5,27 @@ using TMPro;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
-public class EditableText : MonoBehaviour, IPointerUpHandler
+public class EditableText : MonoBehaviour, IPointerUpHandler, ISelectHandler, IDeselectHandler
 {
     public TMP_Text text;
     private TMP_InputField inputField;
     private string originalText;
     private bool isDragging = false; // Track dragging state
+    private bool isSelected = false; // Track selection state
+    
+    // Changed from private field to public property with private setter
+    public static EditableText CurrentlySelectedText { get; private set; } = null;
+    
+    private Color originalColor;
     
     void Start()
     {
+        // Store original color
+        if (text == null)
+            text = GetComponent<TMP_Text>();
+        
+        originalColor = text.color;
+        
         // Create input field if it doesn't exist
         if (inputField == null)
         {
@@ -93,14 +105,76 @@ public class EditableText : MonoBehaviour, IPointerUpHandler
     // Replace OnPointerClick with OnPointerUp to respond when finger is released
     public void OnPointerUp(PointerEventData eventData)
     {
-        // Only open keyboard if not dragging
+        // Only process if not dragging
         if (!isDragging)
         {
-            OpenKeyboard();
+            if (isSelected)
+            {
+                // Second click on selected text - open keyboard
+                OpenKeyboard();
+            }
+            else
+            {
+                // First click - select this text
+                Select();
+            }
         }
         
         // Reset drag state on pointer up
         isDragging = false;
+    }
+    
+    // Called by Unity's EventSystem when this object is selected
+    public void OnSelect(BaseEventData eventData)
+    {
+        Select();
+    }
+    
+    // Called by Unity's EventSystem when another object is selected
+    public void OnDeselect(BaseEventData eventData)
+    {
+        Deselect();
+    }
+    
+    // Select this text object
+    private void Select()
+    {
+        // Deselect previous text if there was one
+        if (CurrentlySelectedText != null && CurrentlySelectedText != this)
+        {
+            CurrentlySelectedText.Deselect();
+        }
+        
+        // Select this text
+        isSelected = true;
+        CurrentlySelectedText = this;
+        
+        // Visual indicator of selection (highlight text)
+        text.color = Color.yellow; // Or any other visual indicator
+        
+        // Make sure the EventSystem knows this is selected
+        EventSystem.current.SetSelectedGameObject(gameObject);
+    }
+    
+    // Deselect this text object
+    public void Deselect()
+    {
+        if (isSelected)
+        {
+            isSelected = false;
+            text.color = originalColor;
+            
+            if (CurrentlySelectedText == this)
+            {
+                CurrentlySelectedText = null;
+            }
+            
+            // If this was the EventSystem's selected object, clear it
+            if (EventSystem.current.currentSelectedGameObject == gameObject)
+            {
+                EventSystem.current.SetSelectedGameObject(null);
+            }
+        }
     }
     
     // Add method to set dragging state from MoveElements
@@ -139,5 +213,8 @@ public class EditableText : MonoBehaviour, IPointerUpHandler
         // Hide input field and show original text
         inputField.gameObject.SetActive(false);
         text.gameObject.SetActive(true);
+        
+        // Retain selection after editing
+        Select();
     }
 }
