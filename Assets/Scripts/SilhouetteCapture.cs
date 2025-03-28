@@ -25,10 +25,12 @@ public class SilhouetteCapture : MonoBehaviour
 
     void Start()
     {
+        Screen.orientation=ScreenOrientation.Portrait;
         // Démarrer le flux de la caméra
         if (WebCamTexture.devices.Length > 0)
         {
-            webcamTexture = new WebCamTexture(WebCamTexture.devices[0].name, 1280, 720);
+            // webcamTexture = new WebCamTexture(WebCamTexture.devices[0].name, 1280, 720);
+            webcamTexture = new WebCamTexture(WebCamTexture.devices[0].name, Screen.height, Screen.width);
             cameraFeed.texture = webcamTexture;
             webcamTexture.Play();
 
@@ -77,6 +79,7 @@ public class SilhouetteCapture : MonoBehaviour
         // Get the aspect ratio - for portrait mode we need to use inverted ratio
         float cameraRatio = (float)webcamTexture.width / (float)webcamTexture.height;
         float screenRatio = (float)Screen.width / (float)Screen.height;
+      
         
         // In portrait mode, we want to fill height and center horizontally
         if (isPortrait)

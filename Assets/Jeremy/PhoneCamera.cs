@@ -15,7 +15,7 @@ public class PhoneCamera : MonoBehaviour
     public RawImage background;
     public RawImage snapshotDisplay; // Pour afficher la capture d'écran
     public AspectRatioFitter fit;
-    public GameObject UI;
+    public List<GameObject> UI = new List<GameObject>();
 
     // Start is called before the first frame update
     private void Start()
@@ -89,7 +89,10 @@ public class PhoneCamera : MonoBehaviour
         // snapshotDisplay.enabled = true;
 
         // Debug.Log("Snapshot taken and rotated: " + backCam.videoRotationAngle + "°");
-        UI.SetActive(false);
+        foreach(GameObject GO in UI){
+            GO.SetActive(false);
+        }
+        
         StartCoroutine(TakeAPhoto());
     }
  IEnumerator TakeAPhoto()
@@ -110,7 +113,9 @@ public class PhoneCamera : MonoBehaviour
         NativeGallery.SaveImageToGallery(texture, "WELL Project", name);
 
         Destroy(texture);
-        UI.SetActive(true);
+        foreach(GameObject GO in UI){
+            GO.SetActive(true);
+        }
     }
 
 
