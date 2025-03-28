@@ -71,10 +71,13 @@ public class EditableText : MonoBehaviour, IPointerUpHandler, ISelectHandler, ID
             textAreaRect.offsetMin = Vector2.zero;
             textAreaRect.offsetMax = Vector2.zero;
 
-            // Create text component for input field
-            TMP_Text inputText = Instantiate(text, textArea.transform);
-            inputText.name = "Text";
-
+            // Create a new TextMeshPro text component instead of instantiating the original
+            GameObject textObject = new GameObject("Text");
+            textObject.transform.SetParent(textArea.transform);
+            
+            // Add TextMeshProUGUI component
+            TextMeshProUGUI inputText = textObject.AddComponent<TextMeshProUGUI>();
+            
             // Setup input field rect transform to match original text
             RectTransform inputTextRect = inputText.GetComponent<RectTransform>();
             inputTextRect.anchorMin = Vector2.zero;
@@ -91,6 +94,13 @@ public class EditableText : MonoBehaviour, IPointerUpHandler, ISelectHandler, ID
             inputText.color = text.color;
             inputText.font = text.font;
             inputText.alignment = text.alignment;
+            
+            // Copy text and other properties that might be important
+            inputText.text = text.text;
+            inputText.enableWordWrapping = text.enableWordWrapping;
+            inputText.richText = text.richText;
+            inputText.fontStyle = text.fontStyle;
+            inputText.overflowMode = text.overflowMode;
 
             // Add content type and other settings
             inputField.contentType = TMP_InputField.ContentType.Standard;
@@ -106,21 +116,23 @@ public class EditableText : MonoBehaviour, IPointerUpHandler, ISelectHandler, ID
 
     void Update()
     {
-        // Check for mouse clicks outside UI elements
-        if (Input.GetMouseButtonDown(0) && isSelected)
+        // Check for touch/click outside UI elements
+        if ((Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began || 
+             Input.GetMouseButtonDown(0)) && isSelected)
         {
-            CheckClickOutsideUI();
+            CheckInputOutsideUI();
         }
     }
 
-    private void CheckClickOutsideUI()
+    private void CheckInputOutsideUI()
     {
-        // Check if we're clicking on a UI element with EventSystem first
-        if (EventSystem.current.IsPointerOverGameObject())
+        // Check if we're touching/clicking on a UI element with EventSystem
+        if (EventSystem.current.IsPointerOverGameObject() || 
+            (Input.touchCount > 0 && EventSystem.current.IsPointerOverGameObject(Input.GetTouch(0).fingerId)))
         {
             // We hit some UI element, let's check if it has the UI tag
             PointerEventData eventData = new PointerEventData(EventSystem.current);
-            eventData.position = Input.mousePosition;
+            eventData.position = Input.touchCount > 0 ? (Vector2)Input.GetTouch(0).position : Input.mousePosition;
             List<RaycastResult> results = new List<RaycastResult>();
             EventSystem.current.RaycastAll(eventData, results);
 
@@ -151,9 +163,18 @@ public class EditableText : MonoBehaviour, IPointerUpHandler, ISelectHandler, ID
 
     private bool IsPointerOverUIElement()
     {
-        // Check if pointer is over any UI element
+        // Check if pointer/touch is over any UI element
+        bool isOverUI = EventSystem.current.IsPointerOverGameObject();
+        
+        // Also check for touch input
+        if (Input.touchCount > 0)
+            isOverUI = isOverUI || EventSystem.current.IsPointerOverGameObject(Input.GetTouch(0).fingerId);
+            
+        if (!isOverUI) return false; // Quick exit if not over UI at all
+
+        // Check if pointer is over any UI element with the UI tag
         PointerEventData eventData = new PointerEventData(EventSystem.current);
-        eventData.position = Input.mousePosition;
+        eventData.position = Input.touchCount > 0 ? (Vector2)Input.GetTouch(0).position : Input.mousePosition;
         List<RaycastResult> results = new List<RaycastResult>();
         EventSystem.current.RaycastAll(eventData, results);
 
@@ -241,9 +262,9 @@ public class EditableText : MonoBehaviour, IPointerUpHandler, ISelectHandler, ID
     {
         if (!isSelected)
             return;
-
-       
-       
+        
+   
+        
         // Only clear TextManager.Text if it's still referencing this text
         if (textManager != null && textManager.Text == text)
         {
