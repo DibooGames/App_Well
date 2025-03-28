@@ -13,7 +13,7 @@ public class PhoneCamera : MonoBehaviour
     private Texture defaultBackground;
 
     public RawImage background;
-    public RawImage snapshotDisplay; // Pour afficher la capture d'écran
+      // Pour afficher la capture d'écran
     public AspectRatioFitter fit;
     public GameObject UI;
 
@@ -72,23 +72,7 @@ public class PhoneCamera : MonoBehaviour
     
     public void TakeSnapshot()
     {
-        // if (!camAvailable)
-        //     return;
-
-        
-        // Texture2D snapshot = new Texture2D(backCam.width, backCam.height);
-        // snapshot.SetPixels(backCam.GetPixels());
-        // snapshot.Apply();
-
-        
-        // snapshot = RotateTexture(snapshot, backCam.videoRotationAngle);
-
-        
-        // snapshotDisplay.texture = snapshot;
-        // snapshotDisplay.enabled = false;
-        // snapshotDisplay.enabled = true;
-
-        // Debug.Log("Snapshot taken and rotated: " + backCam.videoRotationAngle + "°");
+       
         UI.SetActive(false);
         StartCoroutine(TakeAPhoto());
     }
