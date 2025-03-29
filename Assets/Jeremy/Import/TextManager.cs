@@ -32,7 +32,27 @@ public class TextManager : MonoBehaviour
                 Debug.Log("Text is null, cannot change color.");
             }
          
+         
        
+    }
+    public void ItalicizeText()
+    {
+        if (Text != null)
+        {
+            textComponent = Text.GetComponent<EditableText>();
+            if (textComponent == null)
+            {
+                Debug.Log("EditableText component not found on TextMeshProUGUI.");
+                return;
+            }
+
+            textComponent.isItalic = !textComponent.isItalic; // Toggle italic state
+           
+        }
+        else
+        {
+            Debug.Log("Text is null, cannot italicize.");
+        }
     }
 
     public void GoNextInFontList()

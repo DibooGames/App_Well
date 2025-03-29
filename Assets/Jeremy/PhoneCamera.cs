@@ -13,10 +13,10 @@ public class PhoneCamera : MonoBehaviour
     private Texture defaultBackground;
 
     public RawImage background;
+
     public AspectRatioFitter fit;
-    public GameObject UI;
-    public GameObject Canvas;
     public GameObject clothing; // Reference to the clothing image
+    public List<GameObject> objectsToHide; // List of objects to hide during snapshot
 
     // Start is called before the first frame update
     private void Start()
@@ -73,8 +73,10 @@ public class PhoneCamera : MonoBehaviour
     
     public void TakeSnapshot()
     {
-        UI.SetActive(false);
-        Canvas.SetActive(false); // Deactivate the canvas to hide the UI elements
+        foreach (GameObject obj in objectsToHide)
+        {
+            obj.SetActive(false); // Deactivate all objects in the list
+        }
         clothing.SetActive(true); // Activate the clothing image
         StartCoroutine(TakeAPhoto());
     }
@@ -101,8 +103,10 @@ public class PhoneCamera : MonoBehaviour
 
         // Deactivate the clothing image.
         clothing.SetActive(false);
-        UI.SetActive(true);
-        Canvas.SetActive(true); // Reactivate the canvas to show the UI elements
+        foreach (GameObject obj in objectsToHide)
+        {
+            obj.SetActive(true); // Reactivate all objects in the list
+        }
     }
 
 

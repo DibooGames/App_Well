@@ -26,6 +26,8 @@ public class EditableText : MonoBehaviour, IPointerUpHandler, ISelectHandler, ID
     // Delete button reference
     public Button deleteButton;
 
+    public bool isItalic = false; // Track italic state
+
     void Awake()
     {
        
@@ -188,6 +190,15 @@ public class EditableText : MonoBehaviour, IPointerUpHandler, ISelectHandler, ID
         if (!isSelected && deleteButton != null && deleteButton.gameObject.activeSelf)
         {
             deleteButton.gameObject.SetActive(false);
+        }
+
+        if(isItalic)
+        {
+            text.fontStyle = FontStyles.Italic;
+        }
+        else
+        {
+            text.fontStyle = FontStyles.Normal;
         }
     }
 
