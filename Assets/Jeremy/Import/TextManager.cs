@@ -7,6 +7,8 @@ using TMPro;
 public class TextManager : MonoBehaviour
 {
     public TextMeshProUGUI Text;
+    private EditableText editableText; // Reference to the EditableText component
+    private EditableText textComponent; // Reference to the EditableText component
 
     public List<TMP_FontAsset> fonts; // List of fonts to choose from
     // Start is called before the first frame update
@@ -14,9 +16,16 @@ public class TextManager : MonoBehaviour
         
             if(Text)
             {
+                editableText = Text.GetComponent<EditableText>();
+                if (editableText == null)
+                {
+                    Debug.Log("EditableText component not found on TextMeshProUGUI.");
+                    return;
+                }
+
                 Debug.Log("Text is not null, changing color.");
-                Text.color = CurrentColor;
-        
+                editableText.originalColor = CurrentColor;
+                
             }
             else
             {
