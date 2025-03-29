@@ -310,6 +310,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   text: {fileID: 223503736}
+  textManager: {fileID: 0}
 --- !u!114 &223503736
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -757,6 +758,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   text: {fileID: 482504908}
+  textManager: {fileID: 0}
 --- !u!114 &482504908
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1624,14 +1626,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   background: {fileID: 1302965416}
-  snapshotDisplay: {fileID: 1840906596}
   fit: {fileID: 1302965415}
-  UI:
-  - {fileID: 908122395}
-  - {fileID: 738219413}
-  - {fileID: 7087974393896792471}
-  - {fileID: 947794929}
-  - {fileID: 1717207721}
+  UI: {fileID: 0}
+  clothing: {fileID: 0}
 --- !u!114 &963194230
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4007,9 +4004,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eb43f8da69e43f048b223d34d9d2aee8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Text:
-  - {fileID: 223503736}
-  - {fileID: 482504908}
+  Text: {fileID: 0}
+  fonts: []
 --- !u!114 &8025613549103086888
 MonoBehaviour:
   m_ObjectHideFlags: 0
