@@ -15,6 +15,7 @@ public class PhoneCamera : MonoBehaviour
     public RawImage background;
     public AspectRatioFitter fit;
     public GameObject UI;
+    public GameObject Canvas;
     public GameObject clothing; // Reference to the clothing image
 
     // Start is called before the first frame update
@@ -73,6 +74,7 @@ public class PhoneCamera : MonoBehaviour
     public void TakeSnapshot()
     {
         UI.SetActive(false);
+        Canvas.SetActive(false); // Deactivate the canvas to hide the UI elements
         clothing.SetActive(true); // Activate the clothing image
         StartCoroutine(TakeAPhoto());
     }
@@ -100,6 +102,7 @@ public class PhoneCamera : MonoBehaviour
         // Deactivate the clothing image.
         clothing.SetActive(false);
         UI.SetActive(true);
+        Canvas.SetActive(true); // Reactivate the canvas to show the UI elements
     }
 
 

@@ -8,14 +8,17 @@ using UnityEngine.Android;
 public class MagazineManager : MonoBehaviour
 {
     [SerializeField] private Image magazineImage;
-    [SerializeField] private Button selectImageButton; // Add reference to the button
-    
+    [SerializeField] private Button selectImageButton; 
+    [SerializeField] private Button saveButton; // Add reference to the save button
+    [SerializeField] private List<GameObject> interfaceObjects; // Add list of interface GameObjects
+
     private void Start()
     {
         Debug.Log("MagazineManager Start called");
         
-        // Set up button listener programmatically
+        // Set up button listeners programmatically
         SetupButtonListener();
+        SetupSaveButtonListener(); // Set up save button listener
         
         // Vérifier si NativeGallery est disponible
         CheckNativeGalleryAvailability();
@@ -59,6 +62,65 @@ public class MagazineManager : MonoBehaviour
         {
             Debug.LogError("Select Image Button reference is not assigned in the Inspector!");
         }
+    }
+
+    private void SetupSaveButtonListener()
+    {
+        if (saveButton != null)
+        {
+            saveButton.onClick.RemoveAllListeners();
+            saveButton.onClick.AddListener(OnSaveButtonPressed);
+            Debug.Log("Save button listener set up successfully");
+        }
+        else
+        {
+            Debug.LogError("Save Button reference is not assigned in the Inspector!");
+        }
+    }
+
+    private void OnSaveButtonPressed()
+    {
+        Debug.Log("Save button pressed");
+        StartCoroutine(SaveScreenshot());
+    }
+
+    private IEnumerator SaveScreenshot()
+    {
+        Debug.Log("SaveScreenshot coroutine started");
+
+        // Deactivate all interface objects
+        foreach (var obj in interfaceObjects)
+        {
+            if (obj != null) obj.SetActive(false);
+        }
+
+        // Wait for the end of the frame to ensure UI is hidden
+        yield return new WaitForEndOfFrame();
+
+        // Capture the screen as a texture
+        Texture2D screenshotTexture = ScreenCapture.CaptureScreenshotAsTexture();
+        Debug.Log("Screenshot captured as texture");
+
+        // Save the texture to a file
+        string screenshotPath = Path.Combine(Application.persistentDataPath, "screenshot.png");
+        byte[] imageData = screenshotTexture.EncodeToPNG();
+        File.WriteAllBytes(screenshotPath, imageData);
+        Debug.Log("Screenshot saved to file at: " + screenshotPath);
+
+        // Clean up the texture to free memory
+        Object.Destroy(screenshotTexture);
+
+        // Save the screenshot to the gallery
+        NativeGallery.SaveImageToGallery(screenshotPath, "MagazineApp", "Screenshot.png");
+        Debug.Log("Screenshot saved to gallery");
+
+        // Reactivate all interface objects
+        foreach (var obj in interfaceObjects)
+        {
+            if (obj != null) obj.SetActive(true);
+        }
+
+        Debug.Log("SaveScreenshot coroutine finished");
     }
     
     // This method should be assigned to your UI button in the Inspector
